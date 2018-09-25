@@ -10,6 +10,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Holger Arndt']
   spec.email         = ['holger.arndt@hetzner.com']
 
+  spec.licenses      = ['MIT']
   spec.summary       = 'Ruby client for keepasshttp'
   spec.description   = 'A client for https://github.com/pfn/keepasshttp to ' \
                        'fetch passwords'
