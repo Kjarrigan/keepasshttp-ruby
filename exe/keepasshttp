@@ -4,5 +4,20 @@
 require 'bundler/setup'
 require 'keepasshttp'
 require 'json'
+require 'optparse'
 
-puts Keepasshttp.connect.password_for(ARGV[0]).to_json
+params = {}
+
+ARGV.options do |opts|
+  opts.on('-p INTEGER', '--port', 'Use Keystore::Plain') do |val|
+    params[:port] = val.to_i
+  end
+
+  opts.on('--plain', 'Use Keystore::Plain') do
+    params[:key_store] = :Plain
+  end
+
+  opts.parse!
+end
+
+puts Keepasshttp.connect(params).credentials_for(ARGV[0]).to_json

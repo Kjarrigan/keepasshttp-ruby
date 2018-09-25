@@ -19,21 +19,23 @@ class Keepasshttp
 
   VERSION = '0.1.1'
 
-  def self.connect(port: 19_455)
-    kee = new(port: port)
+  def self.connect(**params)
+    kee = new(**params)
     kee.login
     kee
   end
 
   attr_accessor :port
   attr_reader :session
+  autoload :KeyStore, 'keepasshttp/key_store'
 
-  def initialize(port: 19_455)
+  def initialize(port: 19_455, key_store: false)
     @port = port
     @session = false
+    @key_store = KeyStore.const_get(key_store)
   end
 
-  def password_for(url)
+  def credentials_for(url)
     ping
 
     enc_url = encrypt(url, iv: new_iv)
@@ -51,6 +53,9 @@ class Keepasshttp
 
     @session = OpenSSL::Cipher.new('AES-256-CBC')
     session.encrypt
+
+    return cached_login if @key_store.available?
+
     @key = session.random_key
     new_iv
 
@@ -58,6 +63,16 @@ class Keepasshttp
     return false unless json
 
     @id = json['Id']
+
+    @key_store&.save(id: @id, key: @key)
+  end
+
+  def cached_login
+    cache = @key_store.load
+    @key = cache[:key]
+    @id = cache[:id]
+    new_iv
+    ping
   end
 
   def ping
