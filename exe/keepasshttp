@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'bundler/setup'
+require 'keepasshttp'
+require 'json'
+
+puts Keepasshttp.connect.password_for(ARGV[0]).to_json
