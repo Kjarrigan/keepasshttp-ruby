@@ -17,7 +17,7 @@ class Keepasshttp
   end
   using Base64Helper
 
-  VERSION = '0.1.0'
+  VERSION = '0.1.1'
 
   def self.connect(port: 19_455)
     kee = new(port: port)
