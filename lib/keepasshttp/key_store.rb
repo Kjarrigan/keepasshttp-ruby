@@ -4,6 +4,26 @@ require 'yaml'
 
 class Keepasshttp
   module KeyStore
+    # Input the key and the id directly into the client so you can take care
+    # of the storage yourself.
+    class External
+      def initialize(key:, id:)
+        @params = { key: key, id: id }
+      end
+
+      def save(*_args)
+        false
+      end
+
+      def load
+        @params
+      end
+
+      def available?
+        true
+      end
+    end
+
     # The most simple but unsecure way wo store your session key (so you don't
     # have to reenter the label over and over again). Use this only for testing!
     class Plain

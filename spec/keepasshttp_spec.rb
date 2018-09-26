@@ -6,6 +6,16 @@ RSpec.describe Keepasshttp do
   end
 
   context 'Keepasshttp::KeyStore' do
+    it 'has a External format' do
+      ext = Keepasshttp::KeyStore::External.new(id: 'Foo', key: '1234567890')
+
+      expect(ext.available?).to be(true)
+      expect(ext.save(id: 'Bar', key: '0987654321')).to be(false)
+      expect(ext.load).to eq(
+        id: 'Foo', key: '1234567890'
+      )
+    end
+
     it 'has a Plain format' do
       expect(Keepasshttp::KeyStore::Plain.available?).to be(true)
       Keepasshttp::KeyStore::Plain.save(id: 'Foo', key: '1234567890')

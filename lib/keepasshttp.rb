@@ -27,12 +27,21 @@ class Keepasshttp
 
   attr_accessor :port
   attr_reader :session
+  attr_reader :id
   autoload :KeyStore, 'keepasshttp/key_store'
 
   def initialize(port: 19_455, key_store: false)
     @port = port
     @session = false
-    @key_store = KeyStore.const_get(key_store)
+    init_keystore(key_store) if key_store
+  end
+
+  def init_keystore(key_store)
+    @key_store = if key_store.is_a?(Hash)
+                   KeyStore::External.new(key_store)
+                 else
+                   KeyStore.const_get(key_store)
+                 end
   end
 
   def credentials_for(url)
@@ -54,7 +63,7 @@ class Keepasshttp
     @session = OpenSSL::Cipher.new('AES-256-CBC')
     session.encrypt
 
-    return cached_login if @key_store.available?
+    return cached_login if @key_store&.available?
 
     @key = session.random_key
     new_iv

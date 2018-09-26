@@ -21,6 +21,16 @@ ARGV.options do |opts|
     params[:key_store] = :SshAgent
   end
 
+  opts.on('--key STRING', 'Input your key directly') do |val|
+    params[:key_store] ||= {}
+    params[:key_store][:key] = val
+  end
+
+  opts.on('--id STRING', 'Input your id directly') do |val|
+    params[:key_store] ||= {}
+    params[:key_store][:id] = val
+  end
+
   opts.parse!
 end
 
