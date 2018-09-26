@@ -17,6 +17,10 @@ ARGV.options do |opts|
     params[:key_store] = :Plain
   end
 
+  opts.on('--ssh-agent', 'Use Keystore::SshAgent') do
+    params[:key_store] = :SshAgent
+  end
+
   opts.parse!
 end
 

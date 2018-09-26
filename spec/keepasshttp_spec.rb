@@ -15,10 +15,24 @@ RSpec.describe Keepasshttp do
         :id: Foo
         :key: '1234567890'
       YAML
+
+      expect(Keepasshttp::KeyStore::Plain.load).to eq(
+        id: 'Foo', key: '1234567890'
+      )
     end
 
-    it 'can load from Plain' do
-      expect(Keepasshttp::KeyStore::Plain.load).to eq(
+    it 'has an SshAgent format (encrypted Plain)' do
+      expect(Keepasshttp::KeyStore::SshAgent.available?).to be(true)
+
+      Keepasshttp::KeyStore::SshAgent.save(id: 'Foo', key: '1234567890')
+
+      cfg_file = File.read(Keepasshttp::KeyStore::Plain::PATH)
+      expect(cfg_file).to match(/id: Foo/)
+      expect(cfg_file).to match(/key:/)
+      expect(cfg_file).to_not match(/1234567890/)
+      expect(cfg_file).to match(/iv:/)
+
+      expect(Keepasshttp::KeyStore::SshAgent.load).to eq(
         id: 'Foo', key: '1234567890'
       )
     end
