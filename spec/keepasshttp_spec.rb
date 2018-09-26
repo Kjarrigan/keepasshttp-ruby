@@ -47,4 +47,34 @@ RSpec.describe Keepasshttp do
       )
     end
   end
+
+  context 'Client' do
+    it 'can login to an opened Keepass' do
+      kee = Keepasshttp.connect
+      expect(kee.id).to eq('Test')
+    end
+
+    it 'can login to can store the credentials in a key_store' do
+      File.delete(Keepasshttp::KeyStore::Plain::PATH)
+
+      kee = Keepasshttp.connect(key_store: :Plain)
+      expect(kee.id).to eq('Test')
+
+      kee = Keepasshttp.connect(key_store: :Plain)
+      expect(kee.id).to eq('Test')
+    end
+
+    it 'can request credentials' do
+      kee = Keepasshttp.connect(key_store: :Plain)
+
+      expect(kee.credentials_for('example.com')).to eq(
+        [{
+          'Login' => 'foo',
+          'Name' => 'example.com',
+          'Password' => 'secret',
+          'Uuid' => 'A3BE9660BC4BDC45B69806D212D933B4'
+        }]
+      )
+    end
+  end
 end
