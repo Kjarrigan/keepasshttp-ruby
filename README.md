@@ -20,13 +20,31 @@ Or install it yourself as:
 
 ## Usage
 
-```
-require 'keepass'
+```ruby
+require 'keepasshttp'
 
-keep = Keepass.connect
+keep = Keepasshttp.connect
 
-keep.password_for('http://example.com')
+keep.credentials_for('http://example.com')
 ```
+
+### KeyStores
+
+With the above code you'll be prompted by your Keepass to enter a label for the new key (because the tool generates a new key every time)
+which is shorter that typing your password but still annoying. So I added a (session) key_store. At the moment you can choose between:
+
+  * :Plain - save your key in plaintext - maximum convienience, minimal security
+    ```ruby
+      Keepasshttp.connect(key_store: :Plain)
+    ```
+  * :SshAgent - (re)use your running ssh-agent session to encrypt your session key (and then save it to a file)
+    ```ruby
+      Keepasshttp.connect(key_store: :SshAgent)
+    ```
+  * { key:, id: } - Do the keymanagement yourself and just input the necessary keys as Hash.
+    ```ruby
+      Keepasshttp.connect(key_store: { key: 'SECRET', id: 'Foo' })
+    ```
 
 ## Development
 
@@ -37,7 +55,7 @@ To install this gem onto your local machine, run `bundle exec rake install`.
 To see if it works run
 
 ```bash
-$ keepasshttp URL_THAT_IS_IN_YOUR_KEEPASSDB
+$ keepasshttp URL_THAT_IS_IN_YOUR_KEEPASSDB [OPTS]
 ```
 
 If it works Keypass will prompt you for a label (which name you pick is irrelevant) and it should print you an json to the shell containing your data.

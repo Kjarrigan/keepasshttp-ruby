@@ -2,4 +2,10 @@ AllCops:
   TargetRubyVersion: 2.5
 
 Naming/UncommunicativeMethodParamName:
-  AllowedNames: [ iv ]
+  AllowedNames:
+    - iv
+    - id
+
+Metrics/BlockLength:
+  Exclude:
+    - spec/*_spec.rb
