@@ -7,6 +7,7 @@ require 'optparse'
 
 params = {}
 params[:key_store] = :auto
+output_style = :json
 
 ARGV.options do |opts| # rubocop:disable Metrics/BlockLength
   opts.banner = 'keepasshttp [options] URL [URL]'
@@ -35,7 +36,7 @@ ARGV.options do |opts| # rubocop:disable Metrics/BlockLength
   end
 
   opts.on('-f', '--format STYLE', 'Choose output formater. [json]') do |style|
-    output_format = style
+    output_style = style
   end
 
   opts.parse!
@@ -47,9 +48,8 @@ ARGV.options do |opts| # rubocop:disable Metrics/BlockLength
 end
 
 begin
-  puts Keepasshttp.connect(params).formatted_credentials_for(ARGV, output_format)
-rescue StandardError => err
-  warn err.message
+  puts Keepasshttp.connect(params).formatted_credentials_for(ARGV, output_style)
+rescue StandardError => e
+  warn e.message
   exit(1)
 end
-

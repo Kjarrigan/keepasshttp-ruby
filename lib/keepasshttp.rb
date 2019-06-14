@@ -4,6 +4,7 @@
 require 'json'
 require 'net/http'
 require 'openssl'
+require 'uri'
 
 require_relative 'core_ext'
 require 'keepasshttp/crypto'
@@ -23,19 +24,12 @@ class Keepasshttp
 
   attr_accessor :port
   attr_reader :id
+  autoload :Formatter, 'keepasshttp/formatter'
   autoload :KeyStore, 'keepasshttp/key_store'
 
-  def initialize(port: 19_455, key_store: false)
+  def initialize(port: 19_455, key_store: :auto)
     @port = port
-    init_keystore(key_store) if key_store
-  end
-
-  def init_keystore(key_store)
-    @key_store = if key_store.is_a?(Hash)
-                   KeyStore::External.new(key_store)
-                 else
-                   KeyStore.const_get(key_store)
-                 end
+    @key_store = KeyStore.init(key_store)
   end
 
   def credentials_for(url)
@@ -49,6 +43,21 @@ class Keepasshttp
         [key, decrypt(val, iv: iv)]
       end.to_h
     end
+  end
+
+  def formatted_credentials_for(urls, style)
+    list = urls.map do |url|
+      credentials_for(url).map do |dataset|
+        case style.to_s
+        when 'url' then Formatter.as_url(url, dataset)
+        when 'json' then dataset
+        else raise ArgumentError, "Unknown output format #{style.inspect}"
+        end
+      end
+    end.flatten
+    list = list.first if list.size == 1
+    list = list.to_json if style.to_s == 'json'
+    list
   end
 
   def login
