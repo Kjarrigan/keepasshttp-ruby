@@ -5,19 +5,15 @@ require 'json'
 require 'net/http'
 require 'openssl'
 
+require_relative 'core_ext'
+require 'keepasshttp/crypto'
+
 # At the moment everything is in this one class as the "logic" is manageable
 class Keepasshttp
-  # Provide String.to_base64 as refinement
-  module Base64Helper
-    refine String do
-      def to_base64
-        [self].pack('m*').chomp
-      end
-    end
-  end
-  using Base64Helper
-
   VERSION = '0.2.0'
+
+  include Crypto
+  using Base64Helper
 
   def self.connect(**params)
     kee = new(**params)
@@ -26,13 +22,11 @@ class Keepasshttp
   end
 
   attr_accessor :port
-  attr_reader :session
   attr_reader :id
   autoload :KeyStore, 'keepasshttp/key_store'
 
   def initialize(port: 19_455, key_store: false)
     @port = port
-    @session = false
     init_keystore(key_store) if key_store
   end
 
@@ -60,9 +54,7 @@ class Keepasshttp
   def login
     return true if @session
 
-    @session = OpenSSL::Cipher.new('AES-256-CBC')
-    session.encrypt
-
+    new_session
     return cached_login if @key_store&.available?
 
     @key = session.random_key
@@ -107,28 +99,5 @@ class Keepasshttp
     return json if resp.code =~ /^2..$/ && json['Success']
 
     raise(json['Error'] || resp.body)
-  end
-
-  def new_iv
-    iv = session.random_iv
-    @nonce = iv.to_base64
-    @verifier = encrypt(iv.to_base64, iv: iv)
-    iv
-  end
-
-  def encrypt(val, iv:)
-    session.encrypt
-    session.key = @key
-    session.iv = iv
-
-    (session.update(val) + session.final).to_base64
-  end
-
-  def decrypt(string, iv:)
-    session.decrypt
-    session.key = @key
-    session.iv = iv.unpack1('m*')
-
-    session.update(string.unpack1('m*')) + session.final
   end
 end
