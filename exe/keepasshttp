@@ -1,16 +1,21 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require 'bundler/setup'
 require 'keepasshttp'
 require 'json'
 require 'optparse'
 
 params = {}
+params[:key_store] = :auto
 
-ARGV.options do |opts|
-  opts.on('-p INTEGER', '--port', 'Use Keystore::Plain') do |val|
-    params[:port] = val.to_i
+ARGV.options do |opts| # rubocop:disable Metrics/BlockLength
+  opts.banner = 'keepasshttp [options] URL [URL]'
+  opts.on('-p INTEGER', '--port', 'Set the keepasshttp port [19422]') do |port|
+    params[:port] = port.to_i
+  end
+
+  opts.on('--no-keystore', "Don't save the credentials") do
+    params[:key_store] = false
   end
 
   opts.on('--plain', 'Use Keystore::Plain') do
@@ -21,17 +26,30 @@ ARGV.options do |opts|
     params[:key_store] = :SshAgent
   end
 
-  opts.on('--key STRING', 'Input your key directly') do |val|
-    params[:key_store] ||= {}
-    params[:key_store][:key] = val
+  opts.on('--token ID:KEY', 'Input your credentials') do |token|
+    params[:key_store] ||= token
   end
 
-  opts.on('--id STRING', 'Input your id directly') do |val|
-    params[:key_store] ||= {}
-    params[:key_store][:id] = val
+  opts.on('--environment', 'Use the KEEPASSHTTP_CREDENTIALS variable') do
+    params[:key_store] = :Environment
+  end
+
+  opts.on('-f', '--format STYLE', 'Choose output formater. [json]') do |style|
+    output_format = style
   end
 
   opts.parse!
+
+  if ARGV.empty?
+    puts opts
+    exit(1)
+  end
 end
 
-puts Keepasshttp.connect(params).credentials_for(ARGV[0]).to_json
+begin
+  puts Keepasshttp.connect(params).formatted_credentials_for(ARGV, output_format)
+rescue StandardError => err
+  warn err.message
+  exit(1)
+end
+
